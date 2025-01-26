@@ -1,8 +1,8 @@
 import streamlit as st
 import yfinance as yf
 import numpy as np
-from plot import plot_monte_carlo_results, plot_histogram_with_normal
-from compute import compute_parallel
+from plot import plot_simulations, plot_histogram_with_normal
+from compute import monte_carlo_simulation
 
 st.set_page_config(layout="wide")
 
@@ -13,8 +13,8 @@ class StockAnalysisApp:
         self.start_date = "2010-01-01"
         self.end_date = "2025-01-01"
         self.stock_data = None
-        self.T = 10000
-        self.N = 252
+        self.T = 10000 #Anzahl Simulationen
+        self.N = 252 #Tage zu simulieren
         self.initialPrice = None
         self.mu = None
         self.sigma = None
@@ -94,9 +94,9 @@ class StockAnalysisApp:
         
     def plotMC(self):
 
-        matrix = compute_parallel(self.N, self.T, 100, self.mu, self.sigma)
+        matrix = monte_carlo_simulation(self.N, self.T, 100, self.mu, self.sigma)
 
-        fig = plot_monte_carlo_results(matrix)
+        fig = plot_simulations(matrix, self.N, self.T)
 
         st.plotly_chart(fig)
 

@@ -2,46 +2,40 @@ import plotly.graph_objects as go
 import numpy as np
 from scipy.stats import norm
 
-def plot_monte_carlo_results(simulated_data):
+# T = Anzahl Simulationen
+# N = Tage
+
+def plot_simulations(simulations, T, N):
     """
-    Visualizes Monte Carlo simulation results using Plotly.
+    Visualize the Monte Carlo simulations using Plotly.
 
     Parameters:
-        simulated_data (numpy.ndarray): A 2D numpy array (N x T) where rows represent different simulations
-                                         and columns represent time steps.
-
-    Returns:
-        plotly.graph_objects.Figure: The generated Plotly figure object.
+        simulations (ndarray): A 2D NumPy array of simulated prices with T rows and N columns.
+        T (int): Number of simulations.
+        N (int): Number of trading days.
     """
-    if simulated_data.ndim != 2:
-        raise ValueError("Input data must be a 2D numpy array with shape (N, T).")
-
     fig = go.Figure()
 
-    # Add each simulation as a separate trace
-    for i in range(simulated_data.shape[0]):
-        fig.add_trace(
-            go.Scatter(
-                x=np.arange(simulated_data.shape[1]),
-                y=simulated_data[i, :],
-                mode='lines',
-                line=dict(width=0.5),
-                name=f'Simulation {i + 1}' if i < 10 else None,  # Show names only for the first 10
-                showlegend=i < 10  # Limit legend entries to the first 10 simulations
-            )
-        )
+    # Add simulated prices as lines to the Plotly figure
+    for i in range(N):  # N steht für die Anzahl der Simulationen (Spalten)
+        fig.add_trace(go.Scatter(
+            x=np.arange(T),  # X-Achse: Handelstage (Zeilen)
+            y=simulations[:, i],  # Zugriff auf die i-te Spalte (Simulation)
+            mode='lines',
+            line=dict(color='rgba(0, 0, 255, 0.1)', width=1),  # rgba mit Transparenz
+        ))
 
-    # Update layout for better visualization
+    # Add titles and axis labels
     fig.update_layout(
-        title="Monte Carlo Simulation Results",
-        xaxis_title="Time Steps",
-        yaxis_title="Price",
-        template="plotly_white",
-        showlegend=True,
-        legend=dict(title="Simulations", itemsizing="trace")
+        title=f"Monte Carlo Simulation ({N} Simulations)",
+        xaxis_title="Trading Days",
+        yaxis_title="Share Price",
+        showlegend=False
     )
 
     return fig
+
+
 
 def plot_histogram_with_normal(random_data):
     """

@@ -1,61 +1,34 @@
 import numpy as np
-from concurrent.futures import ThreadPoolExecutor
-import matplotlib.pyplot as plt
-from plot import plot_monte_carlo_results
 
-def simulate_single_batch(T, initial_price, mu, sigma, n_sim):
-    Z = np.random.normal(0, 1, (T-1, n_sim))
-    drift = (mu - 0.5 * sigma**2)
-    diffusion = sigma * Z
-    log_prices = np.cumsum(drift + diffusion, axis=0)
-    prices = initial_price * np.exp(log_prices)
-    return np.vstack((np.full((1, n_sim), initial_price), prices))
+def monte_carlo_simulation(T, N, initial_price, mu, sigma):
+    """
+    Führt eine Monte-Carlo-Simulation für Aktienkurse durch.
 
-def compute_parallel(N, T, initial_price, mu, sigma):
+    Parameters:
+        T (int): Anzahl der Tage pro Simulation.
+        N (int): Anzahl der Simulationsläufe.
+        initial_price (float): Startpreis der Aktie.
+        mu (float): Erwartete Rendite (Drift).
+        sigma (float): Volatilität.
 
-    num_cores = 1  # Limit to a reasonable number of threads for Streamlit
-    n_sim_per_core = N // num_cores
+    Returns:
+        np.ndarray: Ein 2D-Array der simulierten Preise (T x N).
+    """
+    simulated_prices = np.zeros((T, N))  # Jede Spalte ist eine Simulation
 
-    args = [(T, initial_price, mu, sigma, n_sim_per_core) for _ in range(num_cores)]
+    for i in range(N):
+        # Initialwert für den Preis (Startwert)
+        prices = np.zeros(T)
+        prices[0] = initial_price
 
-    with ThreadPoolExecutor(max_workers=num_cores) as executor:
-        results = list(executor.map(lambda a: simulate_single_batch(*a), args))
+        # Generiere die Kursentwicklung für jeden Tag
+        for t in range(1, T):
+            # Ziehe eine Zufallszahl Z aus einer Normalverteilung N(0, 1)
+            Z = np.random.normal(0, 1)
+            # Berechne den nächsten Preis
+            prices[t] = prices[t-1] * np.exp((mu - 0.5 * sigma**2) * 1 + sigma * Z)
 
-    return np.hstack(results)
+        simulated_prices[:, i] = prices  # Speichere die Simulation (spaltenweise)
 
-
-def plot_monte_carlo_results(prices):
-    T = prices.shape[0]  # Anzahl der Zeitpunkte (Zeilen)
-    n_sim = prices.shape[1]  # Anzahl der Simulationen (Spalten)
-
-    plt.figure(figsize=(10, 6))
-
-    # Plot der einzelnen Simulationen
-    for i in range(n_sim):
-        plt.plot(prices[:, i], color='blue', alpha=0.1)  # Jede Simulation in Blau mit geringer Opazität
-
-    # Plot der mittleren Preisentwicklung (Durchschnitt der Simulationen)
-    avg_prices = np.mean(prices, axis=1)
-    plt.plot(avg_prices, color='red', label='Durchschnitt', linewidth=2)
-
-    plt.title('Monte Carlo Simulation von Asset-Preisen')
-    plt.xlabel('Zeit')
-    plt.ylabel('Preis')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-# Beispiel-Aufruf:
-N = 1000  # Anzahl der Simulationen
-T = 252   # Anzahl der Zeitpunkte (z.B. 252 Handelstage in einem Jahr)
-initial_price = 100  # Initialer Preis
-mu = 0.05  # Erwartete Rendite (5%)
-sigma = 0.2  # Volatilität (20%)
-
-# Berechnungen durchführen
-prices = compute_parallel(N, T, initial_price, mu, sigma)
-
-# Simulationsergebnisse plotten
-plot_monte_carlo_results(prices)
-
+    return simulated_prices
 
