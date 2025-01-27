@@ -45,7 +45,7 @@ class StockAnalysisApp:
         st.sidebar.divider()
         # Create the select slider
         selected_time = st.sidebar.select_slider(
-            "Number of years providing historical returns So,  10 Years means from 2015 to 2025",
+            "Number of years providing historical returns",
             options=time_options,  # Discrete options
             value="10 Years"  # Default value
         )
@@ -84,6 +84,27 @@ class StockAnalysisApp:
             self.T = 10000
         elif selected_time == "100,000":
             self.T = 100000
+        
+        st.sidebar.divider()
+
+        t_simulation_runs = ["1 Month", "6 Months", "1 Year", "2 Years"]
+
+        selected_time = st.sidebar.select_slider(
+            "Simulation Duration",
+            options=t_simulation_runs,  # Discrete options
+            value="1 Year"  # Default value
+        )
+
+        if selected_time == "1 Month":
+            self.N = int(self.N/12)
+        elif selected_time == "6 Months":
+            self.N = int(self.N/2)
+        elif selected_time == "1 Year":
+            pass
+        elif selected_time == "2 Years":
+            self.N = self.N*2
+
+
 
 
     def fetch_stock_data(self):
