@@ -1,6 +1,7 @@
 import streamlit as st
 import yfinance as yf
 import numpy as np
+import pandas as pd
 from datetime import datetime
 from plot import plot_simulations, plot_histogram_with_normal
 from compute import monte_carlo_simulation
@@ -10,7 +11,11 @@ st.set_page_config(layout="wide")
 class StockAnalysisApp:
     def __init__(self):
         """Initialize the Stock Analysis App."""
-        self.ticker = None
+        st.title("Portfolio Risk Analysis")
+        self.tickers = {
+    "Asset Ticker": ["AAPL"],
+    "Capital (in €)": [100],
+        }
         self.start_date = "2010-01-01"
         self.end_date = "2025-01-01"
         self.stock_data = None
@@ -20,26 +25,8 @@ class StockAnalysisApp:
         self.mu = None
         self.sigma = None
 
-    def get_user_input(self):
-        """Create input widgets for the user to specify stock ticker and date range."""
-        st.title("Portfolio Risk Analysis")
+        self.assets = pd.DataFrame({"Asset": [], "Price":[] })
 
-        # Create a 3-column layout for ticker input, date range, and the Analyze button
-        col1, col2, col3 = st.columns(3)
-
-        # Ticker input in the first column
-        with col1:
-            self.ticker = st.text_input("Enter the stock ticker (e.g., AAPL, TSLA):", "AAPL")
-
-        # Dropdown and button in the second column
-        with col2:
-            col21, col22, col23, col24, col25 = st.columns(5)
-            with col21:
-                col21.markdown("<div style='width: 1px; height: 28px'></div>", unsafe_allow_html=True)
-                # Add the "Analyze Stock" button
-                analyze_button_clicked = st.button("Go")
-
-            return analyze_button_clicked
     def sidebar(self):
         time_options = ["1 Month", "1 Year", "5 Years", "10 Years"]
         st.sidebar.divider()
@@ -104,23 +91,36 @@ class StockAnalysisApp:
         elif selected_time == "2 Years":
             self.N = self.N*2
 
+        st.sidebar.divider()
+
+        tickers_capital = pd.DataFrame(self.tickers)
+
+        # Editable Table
+        edited_df = st.sidebar.data_editor(tickers_capital, num_rows="dynamic")
+
+        st.sidebar.divider()
+
+    def get_user_input(self):
+        analyze_button_clicked = st.sidebar.button("Start Simulation")
+        return analyze_button_clicked
+
 
 
 
     def fetch_stock_data(self):
         """Fetch historical stock data from Yahoo Finance."""
-        if self.ticker:
+        if self.tickers:
             try:
-                self.stock_data = yf.download(self.ticker, start=self.start_date, end=self.end_date)
+                self.stock_data = yf.download(self.tickers, start=self.start_date, end=self.end_date)
                 if self.stock_data.empty:
-                    st.error("No data found for the specified ticker and date range.")
+                    st.error("No data found for the specified tickers and date range.")
                     return False
                 return True
             except Exception as e:
                 st.error(f"An error occurred while fetching stock data: {e}")
                 return False
         else:
-            st.warning("Please enter a valid stock ticker.")
+            st.warning("Please enter a valid stock tickers.")
             return False
 
     def plot_hist_norm(self):
