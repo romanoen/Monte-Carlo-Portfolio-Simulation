@@ -18,14 +18,14 @@ class StockAnalysisApp:
         }
         self.start_date = "2010-01-01"
         self.end_date = "2025-01-01"
-        self.stock_data = None
+        self.stock_data = {}
         self.T = 1000 #Anzahl Simulationen
         self.N = 252 #Tage zu simulieren
         self.initialPrice = None
         self.mu = None
         self.sigma = None
+        self.asset_metrics = {}
 
-        self.assets = pd.DataFrame({"Asset": [], "Price":[] })
 
     def sidebar(self):
         time_options = ["1 Month", "1 Year", "5 Years", "10 Years"]
@@ -96,7 +96,7 @@ class StockAnalysisApp:
         tickers_capital = pd.DataFrame(self.tickers)
 
         # Editable Table
-        edited_df = st.sidebar.data_editor(tickers_capital, num_rows="dynamic")
+        self.edited_tickers = st.sidebar.data_editor(tickers_capital, num_rows="dynamic")
 
         st.sidebar.divider()
 
@@ -108,20 +108,47 @@ class StockAnalysisApp:
 
 
     def fetch_stock_data(self):
-        """Fetch historical stock data from Yahoo Finance."""
-        if self.tickers:
-            try:
-                self.stock_data = yf.download(self.tickers, start=self.start_date, end=self.end_date)
-                if self.stock_data.empty:
-                    st.error("No data found for the specified tickers and date range.")
-                    return False
-                return True
-            except Exception as e:
-                st.error(f"An error occurred while fetching stock data: {e}")
-                return False
-        else:
-            st.warning("Please enter a valid stock tickers.")
+        """Fetch historical stock data for all assets and compute mu, sigma, and initial price."""
+        self.asset_metrics = {}
+
+        if self.edited_tickers is None or self.edited_tickers.empty:
+            st.warning("No tickers provided. Please add at least one stock.")
             return False
+
+        for index, row in self.edited_tickers.iterrows():
+            ticker = row["Asset Ticker"].strip()  # Entferne unnötige Leerzeichen
+            if not ticker:
+                continue  # Falls ein leerer Ticker vorhanden ist
+
+            try:
+                stock_data = yf.download(ticker, start=self.start_date, end=self.end_date)
+
+                if stock_data.empty:
+                    st.error(f"No data found for {ticker} in the specified date range.")
+                    continue
+
+                stock_data["Daily Returns"] = stock_data["Close"].pct_change()
+                daily_returns = stock_data["Daily Returns"].dropna()
+
+                mu = daily_returns.mean()
+                sigma = daily_returns.std()
+                initial_price = stock_data["Close"].iloc[-1]
+
+                # Speichern der berechneten Werte für das jeweilige Asset
+                self.asset_metrics[ticker] = {
+                    "mu": mu,
+                    "sigma": sigma,
+                    "initial_price": initial_price
+                }
+
+            except Exception as e:
+                st.error(f"Error fetching data for {ticker}: {e}")
+
+        if not self.asset_metrics:
+            return False  # Falls keine Daten erfolgreich geladen wurden
+        return True
+
+
 
     def plot_hist_norm(self):
         """Analyze and visualize the daily returns of the stock."""
@@ -150,6 +177,10 @@ class StockAnalysisApp:
 
         st.plotly_chart(fig)
 
+
+
+
+
     def run(self):
         """Run the Streamlit app."""
         st.sidebar.title("Configure Simulation")
@@ -159,10 +190,11 @@ class StockAnalysisApp:
         if analyze_button_clicked:
             if self.fetch_stock_data():
                 col1, col2 = st.columns(2)
-                with col1:
-                    self.plot_hist_norm()
-                with col2:
-                    self.plotMC()
+                print(self.asset_metrics)
+                """ with col1:
+                        self.plot_hist_norm()
+                    with col2:
+                        self.plotMC()"""
 
 
 if __name__ == "__main__":

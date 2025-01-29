@@ -1,0 +1,12 @@
+{
+    "AAPL": {
+        "mu": 0.0005,       # Durchschnittliche tägliche Rendite für AAPL
+        "sigma": 0.02,      # Standardabweichung der täglichen Rendite für AAPL
+        "initial_price": 150.25  # Aktueller Preis von AAPL zum letzten Datum
+    },
+    "GOOG": {
+        "mu": 0.0007,       # Durchschnittliche tägliche Rendite für GOOG
+        "sigma": 0.015,     # Standardabweichung der täglichen Rendite für GOOG
+        "initial_price": 2800.50  # Aktueller Preis von GOOG zum letzten Datum
+    }
+}
