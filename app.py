@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 from plot import plot_simulations, plot_histogram_with_normal
-from compute import monte_carlo_simulation
+from compute import multi_monte_carlo_sim, monte_carlo_simulation
 
 st.set_page_config(layout="wide")
 
@@ -132,13 +132,14 @@ class StockAnalysisApp:
 
                 mu = daily_returns.mean()
                 sigma = daily_returns.std()
-                initial_price = stock_data["Close"].iloc[-1]
+                initial_price = initial_price = row["Capital (in €)"]
 
                 # Speichern der berechneten Werte für das jeweilige Asset
                 self.asset_metrics[ticker] = {
                     "mu": mu,
                     "sigma": sigma,
-                    "initial_price": initial_price
+                    "initial_price": initial_price,
+                    "returns": daily_returns.values
                 }
 
             except Exception as e:
@@ -177,10 +178,6 @@ class StockAnalysisApp:
 
         st.plotly_chart(fig)
 
-
-
-
-
     def run(self):
         """Run the Streamlit app."""
         st.sidebar.title("Configure Simulation")
@@ -190,7 +187,7 @@ class StockAnalysisApp:
         if analyze_button_clicked:
             if self.fetch_stock_data():
                 col1, col2 = st.columns(2)
-                print(self.asset_metrics)
+                multi_monte_carlo_sim(self.T, self.N,self.asset_metrics)
                 """ with col1:
                         self.plot_hist_norm()
                     with col2:

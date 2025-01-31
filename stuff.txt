@@ -1,0 +1,9 @@
+"""keyword = st_tags_sidebar(
+            label="",
+            text=None,
+            value=['TSL: 3212€'],
+            suggestions=['five', 'six', 'seven', 
+                        'eight', 'nine', 'three', 
+                        'eleven', 'ten', 'four'],
+            maxtags = 4,
+            key='2')"""
