@@ -3,8 +3,8 @@ import yfinance as yf
 import numpy as np
 import pandas as pd
 from datetime import datetime
-from plot import plot_simulations, plot_histogram_with_normal
-from compute import multi_monte_carlo_sim, monte_carlo_simulation
+from plot import plot_simulations, plot_histograms_and_normal_dist
+from compute import multi_monte_carlo_sim
 
 st.set_page_config(layout="wide")
 
@@ -25,7 +25,6 @@ class StockAnalysisApp:
         self.mu = None
         self.sigma = None
         self.asset_metrics = {}
-
 
     def sidebar(self):
         time_options = ["1 Month", "1 Year", "5 Years", "10 Years"]
@@ -53,7 +52,7 @@ class StockAnalysisApp:
 
         st.sidebar.divider()
 
-        t_simulation_runs = ["10", "100", "1,000", "10,000", "100,000"]
+        t_simulation_runs = ["10", "100", "500", "1,000", "10,000", "100,000"]
 
         selected_time = st.sidebar.select_slider(
             "Number of Simulation Runs (Calculated Paths)",
@@ -149,32 +148,16 @@ class StockAnalysisApp:
             return False  # Falls keine Daten erfolgreich geladen wurden
         return True
 
+    def plotHistograms(self):
+        fig = plot_histograms_and_normal_dist(self.asset_metrics)
 
-
-    def plot_hist_norm(self):
-        """Analyze and visualize the daily returns of the stock."""
-        if self.stock_data is not None:
-            self.stock_data['Daily Returns'] = self.stock_data['Close'].pct_change()
-            daily_returns = self.stock_data['Daily Returns'].dropna()
-
-            # Perform analysis
-            self.mu = daily_returns.mean()
-            self.sigma = daily_returns.std()
-            self.initialPrice = self.stock_data['Close'].iloc[-1]
-
-            # Plot histogram with normal distribution
-            fig = plot_histogram_with_normal(daily_returns)
-            st.plotly_chart(fig)
-
-            # Display key statistics
-            st.write(f"Mean (\u03bc): {self.mu:.6f}")
-            st.write(f"Standard Deviation (\u03c3): {self.sigma:.6f}")
+        st.plotly_chart(fig)
         
     def plotMC(self):
 
-        matrix = monte_carlo_simulation(self.N, self.T, self.initialPrice, self.mu, self.sigma)
+        matrix = multi_monte_carlo_sim(self.T, self.N, self.asset_metrics)
 
-        fig = plot_simulations(matrix, self.N, self.T)
+        fig = plot_simulations(matrix, self.T, self.N)
 
         st.plotly_chart(fig)
 
@@ -187,11 +170,10 @@ class StockAnalysisApp:
         if analyze_button_clicked:
             if self.fetch_stock_data():
                 col1, col2 = st.columns(2)
-                multi_monte_carlo_sim(self.T, self.N,self.asset_metrics)
-                """ with col1:
-                        self.plot_hist_norm()
-                    with col2:
-                        self.plotMC()"""
+                with col1:
+                    self.plotHistograms()
+                with col2:
+                    self.plotMC()
 
 
 if __name__ == "__main__":
