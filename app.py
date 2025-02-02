@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 from plot import plot_simulations, plot_histograms_and_normal_dist
-from compute import multi_monte_carlo_sim
+from compute import multi_monte_carlo_sim, calculate_metrics
+from test import plot_qq
 
 st.set_page_config(layout="wide")
 
@@ -13,8 +14,8 @@ class StockAnalysisApp:
         """Initialize the Stock Analysis App."""
         st.title("Portfolio Risk Analysis")
         self.tickers = {
-    "Asset Ticker": ["AAPL"],
-    "Capital (in €)": [100],
+    "Asset Ticker": ["AAPL", "GOOG", "MTX.DE"],
+    "Capital (in €)": [100, 400, 350],
         }
         self.start_date = "2010-01-01"
         self.end_date = "2025-01-01"
@@ -155,11 +156,22 @@ class StockAnalysisApp:
         
     def plotMC(self):
 
-        matrix = multi_monte_carlo_sim(self.T, self.N, self.asset_metrics)
+        self.matrix = multi_monte_carlo_sim(self.T, self.N, self.asset_metrics)
 
-        fig = plot_simulations(matrix, self.T, self.N)
+        fig = plot_simulations(self.matrix, self.T, self.N)
 
         st.plotly_chart(fig)
+    
+    def plot_qq(self):
+        qq = plot_qq(self.asset_metrics)
+
+        st.plotly_chart(qq)
+    
+    def plotMetrics(self):
+        metrics = calculate_metrics(self.matrix)
+
+        st.json(metrics)
+
 
     def run(self):
         """Run the Streamlit app."""
@@ -172,8 +184,10 @@ class StockAnalysisApp:
                 col1, col2 = st.columns(2)
                 with col1:
                     self.plotHistograms()
+                    self.plot_qq()
                 with col2:
                     self.plotMC()
+                    self.plotMetrics()
 
 
 if __name__ == "__main__":
