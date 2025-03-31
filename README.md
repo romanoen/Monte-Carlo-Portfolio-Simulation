@@ -1,7 +1,7 @@
 [Try now in Streamlit !](https://monte-carlo-portfolio-simulation.streamlit.app/)
 **Note**: You may have to wake up the application first ! Feel free to do so. 
 
-# **Monte Carlo Simulation for Portfolio Risk Analysis**
+# **Monte Carlo Simulation for Portfolio Risk Analysis 📈**
 
 Monte Carlo simulations estimate the future distribution of portfolio returns by randomly generating thousands of potential price paths based on historical data and statistical assumptions. This technique is particularly useful in risk management, as it allows for the estimation of probabilities of extreme losses.
 
